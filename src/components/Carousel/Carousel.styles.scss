@@ -1,0 +1,71 @@
+@use "../../data/variables.module" as vars;
+
+.carousel-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.carousel-flex-container {
+  display: flex;
+  user-select: none;
+}
+
+#carousel-content {
+  overflow-y: hidden;
+  overflow-x: scroll;
+}
+
+#carousel-slides {
+  display: flex;
+  width: vars.$carousel-width;
+  height: vars.$carousel-height;
+}
+
+.carousel-slide {
+  display: flex;
+  scroll-snap-align: start;
+  overflow-y: scroll;
+  min-width: vars.$slide-width;
+  max-width: vars.$slide-width;
+  //these are useful when slide content is smaller than slide
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-slide > * {
+  width: vars.$content-width;
+  height: vars.$content-height;
+}
+
+.navigation {
+  width: 50px;
+  height: 50px;
+  align-self: center;
+}
+
+.slide-input-form {
+  align-self: center;
+}
+
+.slide-input-form > * {
+  text-align: center;
+  height: 30px;
+  width: 80px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+p {
+  line-height: 20px;
+}
+
+.carousel-slide,
+#carousel-content {
+  -ms-overflow-style: none; // Hides scrollbar for IE and Edge
+  scrollbar-width: none; //      ^^for Firefox
+}
+// Hides scrollbar for Chrome, Safari and Opera
+.carousel-slide::-webkit-scrollbar,
+#carousel-content::-webkit-scrollbar {
+  display: none;
+}
