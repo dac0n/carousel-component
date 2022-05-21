@@ -1,30 +1,25 @@
+// ------------Carousel styling--------------------
+
 $carousel-width: 1000px;     
 $carousel-height: 300px;
 $slides-amount: 4;
+// $content-width: 200px;       //optional
+// $content-height: 200px;      //optional 
 
-/* 
-note that navigation buttons add 50px to the sides
-and slider input adds 40px to the bottom of component
-example - carousel-width: 800px, carousel-height: 300px
-component width: 900px, height: 340px        
+/* ------------------------------------------------- 
+note that navigation buttons add 50px to sides
+and slider input adds 40px to bottom of component
+example - carousel  width: 800px,  carousel  height: 300px
+          component width: 900px,  component height: 340px        
 */
 
-/* you can also set slides inner content
-width and height as written below! */
 
-// $content-width: 200px;
-// $content-height: 200px;
 
-//calculated values for further use
-$slide-width: calc($carousel-width/$slides-amount);
+$carousel-width: min($carousel-width, ( calc(100vh - 100px) ));
 $content-width: 100% !default; //fallback values
 $content-height: auto !default; //in case they are not set
-
-:export {
+$slide-width: calc($carousel-width/$slides-amount);
+:export {   //for JS to work with
     slideWidth: $slide-width;
     slidesAmount: $slides-amount;
 }
-
-
-//i could write code without that file
-//but without libraries it would be messy and harder to read
