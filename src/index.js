@@ -7,12 +7,19 @@ class App extends React.Component {
   render() {
     return (
       <div id="component-container">
-        <Carousel contents={carouselData} />
+        <Carousel
+          contents={carouselData}
+          carouselWidth="1000px"
+          carouselHeight="300px"
+          slidesAmount="3"
+          contentWidth="200px"
+          contentHeight="200px"
+        />
       </div>
     );
   }
 }
 
-ReactDOM.render(<App/>, document.getElementById("root"));
+ReactDOM.render(<App />, document.getElementById("root"));
 
 //
