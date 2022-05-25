@@ -9,11 +9,11 @@ class App extends React.Component {
       <div id="component-container">
         <Carousel
           contents={carouselData}
-          carouselWidth="1000px"
-          carouselHeight="300px"
+          carouselWidth="1000"
+          carouselHeight="300"
           slidesAmount="3"
-          contentWidth="200px"
-          contentHeight="200px"
+          contentWidth="200"
+          contentHeight="200"
         />
       </div>
     );

@@ -3,47 +3,43 @@ import arrowLeft from "./upload/left-squared.png";
 import arrowRight from "./upload/right-squared.png";
 import "./Carousel.styles.scss";
 
-import getStyles from "./utils/styles_calc";
+import { getStyles, calculateSizes, calculateWidths } from "./utils/styles_calc";
 
 
 class Carousel extends Component {
   constructor(props) {
     super(props);
-
-
-    this.styles = getStyles(props.carouselWidth, props.carouselHeight, props.slidesAmount, props.contentWidth, props.contentHeight);
+    this.initialStyles = [props.carouselWidth, props.carouselHeight, props.slidesAmount, props.contentWidth, props.contentHeight];
     this.state = {
       carouselData: props.contents,
       mouseDown: false,
       prevPosition: 0,    //we will use that to remember and compare mouse / touch values
       slideInput: null,
+      styles: getStyles(...this.initialStyles),
     };
+    this.adjustWidths = this.adjustWidths.bind(this);
     this.carouselContentEl = React.createRef();
     this.carouselSlideInput = React.createRef();
   }
 
   componentDidMount = () => { //all these things require loaded DOM
-    this.carouselContentEl.current.querySelectorAll(".carousel-slide > * ").forEach(slideContent => {
-      slideContent.draggable = false; 
-      slideContent.width = this.styles.content_Width;  
-      slideContent.height = this.styles.content_Height; 
-      // we need the block above because we don't have access to slideContent before DOM loaded / at render section
-/* 
-            if (slideContent.nodeName ) {
-              slideContent.parentNode.style.alignItems = 'center';
-            } */
-
-
+    window.addEventListener('resize', this.adjustWidths);
+    this.adjustWidths();
+    this.carouselContentEl.current.querySelectorAll(".contents-container > * ").forEach(slideContent => {
+      slideContent.draggable = false;
+      slideContent.className = 'slide-content';
     });
     this.carouselSlideInput.current.placeholder = `1 ... ${this.state.carouselData.length}`;
-    this.setState({ scrollLimit: (this.state.carouselData.length - this.styles.slides_Amount) * this.styles.slide_Width });
+    this.setState({ scrollLimit: (this.state.carouselData.length - this.state.styles.slides_Amount) * this.state.styles.slide_Width });
     //adding it here since calculation requires variables from state
   }
 
   /* LEFT/RIGHT BUTTONS NAVIGATION */
 
   changeItem = (direction) => {
+    console.log(this.carouselContentEl.current.scrollLeft, direction)
     let scrollObject = this.adjustIfLoop(this.carouselContentEl.current.scrollLeft, this.carouselContentEl.current.scrollLeft + direction, 'button')
+    console.log('scrollObject', scrollObject);
     this.carouselContentEl.current.scrollTo(scrollObject);
     this.adjustScroll(this.carouselContentEl.current.scrollLeft, (direction > 0 ? true : false));
     //line above fixes imprecise scrollTo values when button pressed in a middle of animation
@@ -78,7 +74,7 @@ class Carousel extends Component {
   }
 
   releaseHandler = e => {
-    this.adjustScroll(e.currentTarget.scrollLeft, this.state.mouseInitialX > e.clientX);  //snaps to next closest slide
+    if (this.state.mouseInitialX) this.adjustScroll(e.currentTarget.scrollLeft, this.state.mouseInitialX > e.clientX);  //snaps to next closest slide
     this.setState({ prevPosition: 0, mouseInitialX: 0 });
   }
 
@@ -88,18 +84,25 @@ class Carousel extends Component {
   /* this function calculates the value missing to the next slide and scrolls the carousel to that value */
 
   adjustScroll = (currentScroll, snapForward) => {
-    let snappingValue = snapForward ? (this.styles.slide_Width - currentScroll % this.styles.slide_Width) : -(currentScroll % this.styles.slide_Width);
+    console.log('ADJUST SCROLL, currentScroll:',currentScroll, 'snapForward', snapForward)
+    console.log(this.state.styles.slide_Width - currentScroll % this.state.styles.slide_Width);
+    let snappingValue = snapForward ? (this.state.styles.slide_Width - currentScroll % this.state.styles.slide_Width) : -(currentScroll % this.state.styles.slide_Width);
+    console.log('to left', currentScroll + snappingValue);
+
     this.carouselContentEl.current.scrollTo({
       top: 0,
       left: currentScroll + snappingValue,
       behavior: 'smooth'
     })
+    console.log(this.carouselContentEl.current.scrollLeft)
   }
 
   /* INFINITE SCROLLING  */
   /* this function takes the scroll objects and modifies it to scroll to the first / last slide
   if thats necessary to loop the carousel */
   adjustIfLoop = (curr, next, type) => {
+    console.log('ADJUSTIFLOOP_STYLES:', this.state.styles)
+    console.log('ADJUSTIFLOOP PARAMS', {curr, next, type}, 'this.state.scrollLimit:', this.state.scrollLimit)
     if (curr == 0 && curr > next) {
       return {
         top: 0,
@@ -113,6 +116,7 @@ class Carousel extends Component {
         behavior: "smooth"
       }
     } else {
+      console.log('NO LOOP!')
       return {
         top: 0,
         left: next,
@@ -145,6 +149,7 @@ class Carousel extends Component {
     this.setState({ prevPosition: 0 })
   }
 
+
   /* SLIDE NUMERICAL INPUT SUPPORT  */
 
   handleSlideSubmit() {
@@ -152,36 +157,40 @@ class Carousel extends Component {
     //expression below secures that user cannot select non-existing slide or move carousel out of boundaries
     let adjustedInput =
       (this.state.slideInput < 1) ?
-        0 : (this.state.slideInput > (this.state.carouselData.length - this.styles.slides_Amount)) ?
-          this.state.carouselData.length - this.styles.slides_Amount : this.state.slideInput - 1;
-
+        0 : (this.state.slideInput > (this.state.carouselData.length - this.state.styles.slides_Amount)) ?
+          this.state.carouselData.length - this.state.styles.slides_Amount : this.state.slideInput - 1;
     this.carouselContentEl.current.scrollTo({
       top: 0,
-      left: adjustedInput * this.styles.slide_Width,
+      left: adjustedInput * this.state.styles.slide_Width,
       behavior: 'smooth'
     });
+  }
+
+  adjustWidths() { //called on resize
+    this.setState({ styles: { ...this.state.styles, ...calculateWidths(this.initialStyles[0], this.initialStyles[2], this.initialStyles[4]) } })
   }
 
   /*              RENDERING               */
 
   render() {
+
     const carouselSizes = {
-      width: this.styles.carousel_Width + 'px',
-      height: this.styles.carousel_Height
+      width: this.state.styles.carousel_Width + 'px',
+      height: this.state.styles.carousel_Height + 'px'
     };
     const slideSizes = {
-      minWidth: this.styles.slide_Width,
-      maxWidth: this.styles.slide_Width
+      minWidth: this.state.styles.slide_Width + 'px',
+      maxWidth: this.state.styles.slide_Width + 'px',
     };
     const contentSizes = {
-      width: this.styles.content_Width, 
-      height: this.styles.content_Height
+      width: this.state.styles.content_Width + 'px',
+      height: this.state.styles.content_Height + 'px',
     }
     return (
       <div className="carousel-wrapper">
         <div className="carousel-flex-container">
           <img
-            onClick={() => { this.changeItem(-this.styles.slide_Width) }}
+            onClick={() => { this.changeItem(-this.state.styles.slide_Width) }}
             src={arrowLeft}
             className="navigation flex-child"
           />
@@ -197,13 +206,17 @@ class Carousel extends Component {
             <div id="carousel-slides" style={carouselSizes} className="flex-child" >
               {
                 this.state.carouselData.map((element, i) => {
-                  return <div className="carousel-slide" key={i} style={slideSizes}>{element}</div>
+                  return <div className="carousel-slide" key={i} style={slideSizes}>
+                    <div className="contents-container" key={i} style={contentSizes}>{element}</div>
+                  </div>
                 })
               }
             </div>
+
+
           </div>
           <img
-            onClick={() => { this.changeItem(+this.styles.slide_Width) }}
+            onClick={() => { this.changeItem(+this.state.styles.slide_Width) }}
             src={arrowRight}
             className="navigation flex-child"
           />
