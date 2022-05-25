@@ -9,12 +9,13 @@ import { getStyles, calculateSizes, calculateWidths } from "./utils/styles_calc"
 class Carousel extends Component {
   constructor(props) {
     super(props);
-    this.initialStyles = [props.carouselWidth, props.carouselHeight, props.slidesAmount, props.contentWidth, props.contentHeight];
+    this.initialStyles = [props.carouselWidth, props.carouselHeight, props.slidesAmount, props.contentWidth, props.contentHeight, props.contents.length];
     this.state = {
       carouselData: props.contents,
       mouseDown: false,
       prevPosition: 0,    //we will use that to remember and compare mouse / touch values
       slideInput: null,
+      currentSlide: 0,
       styles: getStyles(...this.initialStyles),
     };
     this.adjustWidths = this.adjustWidths.bind(this);
@@ -30,19 +31,26 @@ class Carousel extends Component {
       slideContent.className = 'slide-content';
     });
     this.carouselSlideInput.current.placeholder = `1 ... ${this.state.carouselData.length}`;
-    this.setState({ scrollLimit: (this.state.carouselData.length - this.state.styles.slides_Amount) * this.state.styles.slide_Width });
     //adding it here since calculation requires variables from state
   }
+
+  __scrollTo = (slideNumber) => {
+    this.carouselContentEl.current.scrollTo({
+      top: 0,
+      left: slideNumber * this.state.styles.slide_Width,
+      behavior: 'smooth'
+    })
+    this.state.currentSlide = slideNumber;
+  }
+
 
   /* LEFT/RIGHT BUTTONS NAVIGATION */
 
   changeItem = (direction) => {
-    console.log(this.carouselContentEl.current.scrollLeft, direction)
-    let scrollObject = this.adjustIfLoop(this.carouselContentEl.current.scrollLeft, this.carouselContentEl.current.scrollLeft + direction, 'button')
-    console.log('scrollObject', scrollObject);
-    this.carouselContentEl.current.scrollTo(scrollObject);
-    this.adjustScroll(this.carouselContentEl.current.scrollLeft, (direction > 0 ? true : false));
-    //line above fixes imprecise scrollTo values when button pressed in a middle of animation
+    let next = this.state.currentSlide + direction;
+    next = next > this.state.carouselData.length -1 ? 0 : next < 0 ? this.state.carouselData.length : next;
+
+    this.__scrollTo(next);
   }
 
 
@@ -65,8 +73,9 @@ class Carousel extends Component {
       if (Math.abs(delta) > 5) {     // means we drag the carousel 5 pixels left/right if mouse moved to the same value
         //the value above can be changed to 1, but it will take 5 times more operations and can lead to performance issues on a slow devices
         let nextScrollVal = e.currentTarget.scrollLeft - delta;
-        let scrollObject = this.adjustIfLoop(e.currentTarget.scrollLeft, nextScrollVal, 'touch');
+        let scrollObject = this.adjustIfLoop(nextScrollVal);
         e.currentTarget.scrollTo(scrollObject);
+        //we don't use __scrollTo method here since transition should be 'instant'
         this.setState({ prevPosition: this.state.prevPosition + delta });
         delta = 0;
       }
@@ -84,43 +93,31 @@ class Carousel extends Component {
   /* this function calculates the value missing to the next slide and scrolls the carousel to that value */
 
   adjustScroll = (currentScroll, snapForward) => {
-    console.log('ADJUST SCROLL, currentScroll:',currentScroll, 'snapForward', snapForward)
-    console.log(this.state.styles.slide_Width - currentScroll % this.state.styles.slide_Width);
     let snappingValue = snapForward ? (this.state.styles.slide_Width - currentScroll % this.state.styles.slide_Width) : -(currentScroll % this.state.styles.slide_Width);
-    console.log('to left', currentScroll + snappingValue);
-
-    this.carouselContentEl.current.scrollTo({
-      top: 0,
-      left: currentScroll + snappingValue,
-      behavior: 'smooth'
-    })
-    console.log(this.carouselContentEl.current.scrollLeft)
+    this.__scrollTo((currentScroll + snappingValue)/this.state.styles.slide_Width);
   }
 
   /* INFINITE SCROLLING  */
   /* this function takes the scroll objects and modifies it to scroll to the first / last slide
   if thats necessary to loop the carousel */
-  adjustIfLoop = (curr, next, type) => {
-    console.log('ADJUSTIFLOOP_STYLES:', this.state.styles)
-    console.log('ADJUSTIFLOOP PARAMS', {curr, next, type}, 'this.state.scrollLimit:', this.state.scrollLimit)
-    if (curr == 0 && curr > next) {
+  adjustIfLoop = (next) => {
+    if (next < 0) {
       return {
         top: 0,
-        left: this.state.scrollLimit,
+        left: this.state.styles.scroll_Limit,
         behavior: "smooth"
       }
-    } else if (curr == this.state.scrollLimit && curr < next) {
+    } else if (next > this.state.styles.scroll_Limit) {
       return {
         top: 0,
         left: 0,
         behavior: "smooth"
       }
     } else {
-      console.log('NO LOOP!')
       return {
         top: 0,
         left: next,
-        behavior: (type == 'touch' ? "instant" : "smooth")
+        behavior: "instant"
       }
     }
   }
@@ -138,12 +135,8 @@ class Carousel extends Component {
     slower the app performance since it would cause to multiple additional
     "if" checks even when user uses non-touch devices */
     if (e.currentTarget.scrollLeft == this.state.prevPosition) {
-      if (e.currentTarget.scrollLeft == 0 || e.currentTarget.scrollLeft == this.state.scrollLimit) {
-        e.currentTarget.scrollTo({
-          top: 0,
-          left: e.currentTarget.scrollLeft ? 0 : this.state.scrollLimit,
-          behavior: 'smooth'
-        })
+      if (e.currentTarget.scrollLeft == 0 || e.currentTarget.scrollLeft > this.state.styles.scroll_Limit-1) {
+        this.__scrollTo(e.currentTarget.scrollLeft ? 0 : this.state.carouselData.length-1)
       }
     }
     this.setState({ prevPosition: 0 })
@@ -159,16 +152,15 @@ class Carousel extends Component {
       (this.state.slideInput < 1) ?
         0 : (this.state.slideInput > (this.state.carouselData.length - this.state.styles.slides_Amount)) ?
           this.state.carouselData.length - this.state.styles.slides_Amount : this.state.slideInput - 1;
-    this.carouselContentEl.current.scrollTo({
-      top: 0,
-      left: adjustedInput * this.state.styles.slide_Width,
-      behavior: 'smooth'
-    });
+
+    this.state.currentSlide = adjustedInput;
+    this.__scrollTo(adjustedInput);
   }
 
   adjustWidths() { //called on resize
-    this.setState({ styles: { ...this.state.styles, ...calculateWidths(this.initialStyles[0], this.initialStyles[2], this.initialStyles[4]) } })
+    this.setState({ styles: { ...this.state.styles, ...calculateWidths(this.initialStyles[0], this.initialStyles[2], this.initialStyles[4], this.state.carouselData.length) } })
   }
+
 
   /*              RENDERING               */
 
@@ -176,21 +168,21 @@ class Carousel extends Component {
 
     const carouselSizes = {
       width: this.state.styles.carousel_Width + 'px',
-      height: this.state.styles.carousel_Height + 'px'
+      height: this.state.styles.carousel_Height + 'px'    //these styles
     };
     const slideSizes = {
-      minWidth: this.state.styles.slide_Width + 'px',
+      minWidth: this.state.styles.slide_Width + 'px',     //allow dynamical
       maxWidth: this.state.styles.slide_Width + 'px',
     };
     const contentSizes = {
-      width: this.state.styles.content_Width + 'px',
+      width: this.state.styles.content_Width + 'px',      //rerendering
       height: this.state.styles.content_Height + 'px',
     }
     return (
       <div className="carousel-wrapper">
         <div className="carousel-flex-container">
           <img
-            onClick={() => { this.changeItem(-this.state.styles.slide_Width) }}
+            onClick={() => { this.changeItem(-1) }}
             src={arrowLeft}
             className="navigation flex-child"
           />
@@ -212,11 +204,9 @@ class Carousel extends Component {
                 })
               }
             </div>
-
-
           </div>
           <img
-            onClick={() => { this.changeItem(+this.state.styles.slide_Width) }}
+            onClick={() => { this.changeItem(1) }}
             src={arrowRight}
             className="navigation flex-child"
           />
