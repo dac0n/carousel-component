@@ -50,8 +50,6 @@ export const calculateWidths = (carouselWidth, slidesAmount, contentWidth, carou
       ? __slideWidth
       : contentWidth;
   //in case of very small screens
-  console.log( (carouselDataLength - slidesAmount) * __slideWidth);
-
   return {
     carousel_Width: __carouselWidth,
     slide_Width: __slideWidth,
