@@ -51,6 +51,10 @@ const carouselData = () => [
     dapibus justo vel, porta ex. Etiam velit ante, aliquet quis nisi sed, dignissim finibus justo.'
   </p>,
   <img src="https://robohash.org/346" />,
+  <audio controls>
+    <source src = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" type="audio/mpeg"/>
+    Your browser does not support the audio element.
+  </audio>,
   <img src="https://robohash.org/387" />,
   <p>
     'Vestibulum odio nisl, hendrerit sit amet lobortis hendrerit, ultricies vitae 
