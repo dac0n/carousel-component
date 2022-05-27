@@ -1,5 +1,5 @@
-/node_modules
-/dist
-/src/index.styles.css
-/src/index.html
-/src/index.js
+node_modules
+dist
+index.styles.css
+index.html
+index.js
