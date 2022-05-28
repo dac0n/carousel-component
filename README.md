@@ -5,8 +5,8 @@ To use, install carousel component:
 `npm install https://github.com/dac0n/carousel-component`;
 
 2) include Carousel.component.jsx in your project; 
-3) 
-4) Use `<Carousel contents={carouselData}/>`, where carouselData is an array of any html contents. That's all!
+
+3) Use `<Carousel contents={carouselData}/>`, where carouselData is an array of any html contents. That's all!
 
 OPTIONAL: 
 You can change the carousel appearance by passing additional props into it. Supported props are:
