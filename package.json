@@ -15,7 +15,7 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },
-  "files": ["/src/components/Carousel"],
+  "files": ["/src/upload", "/src/utils", "/src/Carousel.component.jsx","/src/Carousel.styles.scss"],
   "devDependencies": {
     "@babel/core": "^7.17.10",
     "@babel/preset-env": "^7.17.10",

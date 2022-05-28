@@ -1,6 +1,7 @@
+//example of using carousel component
 import React from "react";
 import ReactDOM from "react-dom";
-import Carousel from "./components/Carousel/Carousel.component";
+import Carousel from "./Carousel.component";
 import carouselData from "./data/carouselData";
 import "./index.styles.scss";
 class App extends React.Component {
