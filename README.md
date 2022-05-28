@@ -1,6 +1,7 @@
 # carousel-component
 
-To use, install carousel component:
+To use, 
+1) install carousel component:
 
 `npm install https://github.com/dac0n/carousel-component`;
 
