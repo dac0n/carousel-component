@@ -1,4 +1,4 @@
-# carousel-component
+# react-carousel-component
 
 To use, 
 1) install carousel component:
